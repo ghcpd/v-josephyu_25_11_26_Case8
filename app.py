@@ -8,7 +8,8 @@ app = Flask(__name__)
 
 
 def init_database(flask_app: Flask) -> None:
-    database_url = os.environ.get("DB_URL")
+    # Accept either DATABASE_URL (common) or DB_URL (legacy)
+    database_url = os.environ.get("DATABASE_URL") or os.environ.get("DB_URL")
     if not database_url:
         raise RuntimeError("Missing DB_URL environment variable")
 
@@ -45,8 +46,9 @@ def list_projects():
 @app.route("/projects", methods=["POST"])
 def create_project():
     payload = request.get_json(force=True)
-    name = payload["name"]
-    owner = payload["owner"]
+    name = payload.get("name")
+    # Accept either 'owner' or 'owner_email' from legacy tutorials
+    owner = payload.get("owner") or payload.get("owner_email")
 
     project = Project(name=name, owner=owner)
     db.session.add(project)
