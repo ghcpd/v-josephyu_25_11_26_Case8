@@ -1,0 +1,44 @@
+Defect 1: README references a different module name and wrong flask command
+Repro:
+  1. Follow README instructions: set env `$env:DATABASE_URL = "sqlite:///project_manager.db"` and run `flask --app project_manager run --debug`
+  2. Observe: `Error: Could not import 'project_manager'` (no module by that name in repo)
+Fix:
+  - Use `flask --app app run --debug` or set `FLASK_APP=app`.
+
+Trace (example):
+  Error: Could not import 'project_manager'.
+
+
+Defect 2: README uses DATABASE_URL while app expects DB_URL
+Repro:
+  1. Set $env:DATABASE_URL = "sqlite:///project_manager.db" and run the app as above
+  2. You get a RuntimeError: Missing DB_URL environment variable
+Fix:
+  - Update app to accept either env var or update the README to instruct using DB_URL; both are fixed by correcting README to use DB_URL and making app accept either variable.
+
+Defect 3: README tutorial uses `owner_email` key and `/api` prefix for tasks
+Repro:
+  1. Post tutorial JSON with `owner_email` and GET `/api/projects/1/tasks` per README
+  2. App's code expects `owner` not `owner_email` (initially KeyError) and tasks path `/projects/<id>/tasks` so GET `/api/...` returns 404
+Fix:
+  - Accept both keys in `app.create_project` (owner or owner_email). Update corrected README to use the `/projects/<id>/tasks` path.
+
+Defect 4: requirements.txt missing critical libraries
+Repro:
+  1. `pip install -r requirements.txt` only installed Flask and pytest; requests and Flask-SQLAlchemy & SQLAlchemy missing.
+Fix:
+  - Add Flask-SQLAlchemy, SQLAlchemy and requests to requirements.txt and pin SQLAlchemy to a compatible 1.4.x series to stay compatible with Flask-SQLAlchemy 3.0.0.
+
+Defect 5: SQLAlchemy/Flask-SQLAlchemy compatibility
+Repro:
+  1. After installing latest SQLAlchemy (2.0.44) running the app raised AttributeError: module 'sqlalchemy' has no attribute '__all__'.
+  2. This error occurs when Flask-SQLAlchemy expects __all__ on sqlalchemy module.
+Fix:
+  - Pin SQLAlchemy==1.4.x in requirements or update Flask-SQLAlchemy to use updated import behavior. For the purposes of this project, we pin SQLAlchemy to 1.4.49.
+
+Trace (example):
+  AttributeError: module 'sqlalchemy' has no attribute '__all__'. Did you mean: '__file__'?
+  File ".../flask_sqlalchemy/extension.py", line 982, in __getattr__
+    if name in mod.__all__:
+
+This happened when SQLAlchemy 2.0.44 was installed without a matching Flask-SQLAlchemy compatible version or when the Flask-SQLAlchemy implementation assumes SQLAlchemy provides an `__all__` attribute.
