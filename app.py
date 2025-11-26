@@ -45,6 +45,11 @@ def list_projects():
 @app.route("/projects", methods=["POST"])
 def create_project():
     payload = request.get_json(force=True)
+    
+    # Validate required fields
+    if not payload or "name" not in payload or "owner" not in payload:
+        return jsonify({"error": "Missing required fields: 'name' and 'owner'"}), 400
+    
     name = payload["name"]
     owner = payload["owner"]
 
