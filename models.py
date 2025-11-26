@@ -9,7 +9,7 @@ class Project(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(80), nullable=False)
-    owner = db.Column(db.String(120), nullable=False)
+    owner_email = db.Column(db.String(120), nullable=False)
     tasks = db.relationship("Task", backref="project", lazy=True)
 
 
