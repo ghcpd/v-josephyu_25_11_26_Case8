@@ -1,0 +1,76 @@
+# Defects
+
+## 1) `flask --app project_manager run --debug` fails (module not found)
+**Repro:**
+1. `python -m venv .venv`
+2. `.\u200B.venv\Scripts\Activate.ps1`
+3. `pip install -r requirements.txt`
+4. `flask --app project_manager run --debug`
+
+**Trace (excerpt):**
+```
+Error: Could not import 'project_manager'.
+```
+
+---
+
+## 2) Missing dependency `flask_sqlalchemy`
+**Repro:**
+1. Set env: `$env:DATABASE_URL = "sqlite:///project_manager.db"`
+2. `flask --app app run --debug`
+
+**Trace (excerpt):**
+```
+ModuleNotFoundError: No module named 'flask_sqlalchemy'
+```
+
+---
+
+## 3) Env var mismatch (`DATABASE_URL` vs `DB_URL`)
+**Repro:**
+1. Set env: `$env:DATABASE_URL = "sqlite:///project_manager.db"`
+2. `flask --app app run --debug`
+
+**Trace (excerpt before code fix):**
+```
+RuntimeError: Missing DB_URL environment variable
+```
+
+---
+
+## 4) PowerShell activation command in README is incorrect
+**Repro:**
+1. In PowerShell, run `.\u200B.venv\Scripts\activate`
+
+**Observed:**
+- No activation; `python`/`pip` resolve to global interpreter.
+
+**Fix:**
+- Use `.\u200B.venv\Scripts\Activate.ps1` in PowerShell (or `source .venv/bin/activate` on bash).
+
+---
+
+## 5) API contract mismatch (payload keys & routes)
+**Repro:**
+- README tutorial posts:
+  ```python
+  requests.post("http://127.0.0.1:5000/projects", json={"name": "Sample", "owner_email": "lead@example.com"})
+  ```
+- README lists tasks via `/api/projects/1/tasks`.
+
+**Observed before fix:**
+- Server expected `owner` instead of `owner_email`.
+- `/api/projects/...` routes were missing.
+- Response JSON used `owner` key.
+```
+{'id': 1, 'name': 'Sample Project', 'owner': 'lead@example.com'}
+```
+
+---
+
+## Resolution summary
+- Added `project_manager.py` module for CLI (`flask --app project_manager`).
+- Added `Flask-SQLAlchemy` and `requests` to `requirements.txt`.
+- App now accepts `DATABASE_URL` (fallback `DB_URL`, default sqlite file).
+- Routes now support `/api/*` and return/accept `owner_email`.
+- PowerShell activation corrected in `corrected_readme.md`.
