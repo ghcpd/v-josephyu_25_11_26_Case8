@@ -1,0 +1,35 @@
+Defects found while validating the Flask Project Manager tutorial
+---------------------------------------------------------------
+
+1) Incorrect Flask app module name in README
+   - Symptoms: README uses `flask --app project_manager run --debug`, but the repository contains `app.py` not `project_manager.py`.
+   - Reproduction:
+     - Run: `flask --app project_manager run --debug` as in README
+   - Trace:
+     Error: Could not import 'project_manager'.
+
+2) Missing dependencies in `requirements.txt`
+   - Symptoms: `models.py` imports `flask_sqlalchemy`, and README tutorials use `requests`, but `requirements.txt` only contained Flask and pytest.
+   - Reproduction:
+     - Create a virtualenv and run: `pip install -r requirements.txt`
+     - Run server: `flask --app app run --debug` (after fixing Flask app module)
+   - Trace:
+     ModuleNotFoundError: No module named 'flask_sqlalchemy'
+
+3) Env var mismatch: README uses `DATABASE_URL`, app originally looked for `DB_URL`.
+   - Symptoms: App raised a runtime error when environment variable was missing and expected DB_URL.
+   - Reproduction:
+     - Unset `DB_URL`/`DATABASE_URL`, run app
+   - Trace:
+     RuntimeError: Missing DB_URL environment variable
+
+4) API tutorial uses mismatched URLs & payload fields
+   - Symptoms: README tutorial uses endpoint `/api/projects/1/tasks` and `owner_email` field, but the code exposes `/projects/<id>/tasks` and expects `owner` on project creation
+   - Reproduction:
+     - Try to create a project using `owner_email` field: server returns 201 but payload acceptance may differ
+   - Trace:
+     No direct exception; mismatch leads to confusion (invalid examples in docs)
+
+Notes:
+- Codebase now supports `DATABASE_URL` or `DB_URL`.
+- README updated to use correct endpoints and field names, and the required packages were added to `requirements.txt`.
