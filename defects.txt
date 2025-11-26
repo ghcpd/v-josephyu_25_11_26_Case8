@@ -1,0 +1,62 @@
+Defects discovered while reproducing onboarding and tutorial
+=========================================================
+
+1) README/Flask import mismatch
+--------------------------------
+What I ran (README exact):
+  $env:DATABASE_URL = "sqlite:///project_manager.db"
+  flask --app project_manager run --debug
+
+Observed error:
+  Error: Could not import 'project_manager'.
+
+Cause:
+  The code's module file is `app.py` (not `project_manager`), so `flask --app project_manager` fails.
+
+Fix implemented:
+  Updated documentation to use `--app app` and/or corrected the code to accept the `DATABASE_URL` env var.
+
+2) Env var name mismatch
+-------------------------
+What README says:
+  Set env var: DATABASE_URL
+
+What code required before fix:
+  app.py read DB_URL (env var) and would raise RuntimeError when not found.
+
+Observed error when run exactly as README:
+  RuntimeError: Missing DB_URL environment variable  (raised during import of the app)
+
+Fix implemented:
+  app.py now reads `DATABASE_URL` to match the README tutorial. Tests use an in-memory SQLite URL for isolation.
+
+3) Payload & response schema mismatch
+-------------------------------------
+README examples used `owner_email` key and expected that field in responses. The original code accepted/returned `owner`.
+
+Effects:
+  Tutorial example payloads would have produced a KeyError or unexpected response body mismatch.
+
+Fix implemented:
+  app.py now accepts `owner` OR `owner_email` in POST payload and returns `owner_email` in responses.
+
+4) Endpoint path discrepancy
+----------------------------
+README example for tasks used path: /api/projects/1/tasks
+App exposes: /projects/<id>/tasks
+
+Fix implemented:
+  Corrected README docs to point to `/projects/<id>/tasks` (no /api prefix).
+
+5) Missing dependencies in requirements.txt
+------------------------------------------
+Before: requirements only had Flask and pytest.
+Problem: app imports flask_sqlalchemy and README examples use requests.
+
+Fix implemented:
+  Added Flask-SQLAlchemy and requests to requirements.txt so `pip install -r requirements.txt` installs everything needed.
+
+Notes / next steps
+------------------
+- All fixes implemented and validated with pytest. Tests added under `tests/test_app.py`.
+- See `corrected_readme.md` for exact onboarding and tutorial commands that were verified.
