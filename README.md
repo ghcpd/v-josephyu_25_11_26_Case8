@@ -2,6 +2,8 @@
 
 A minimal project management API built with Flask.
 
+NOTE: If you are following this project's tutorial, please see `corrected_readme.md` for working onboarding instructions and examples (it fixes a few inconsistencies in this original README). 
+
 ## Onboarding
 
 1. Create a virtual environment:

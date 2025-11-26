@@ -8,7 +8,8 @@ app = Flask(__name__)
 
 
 def init_database(flask_app: Flask) -> None:
-    database_url = os.environ.get("DB_URL")
+    # Accept either DB_URL or DATABASE_URL for compatibility with different docs
+    database_url = os.environ.get("DB_URL") or os.environ.get("DATABASE_URL")
     if not database_url:
         raise RuntimeError("Missing DB_URL environment variable")
 
@@ -46,7 +47,10 @@ def list_projects():
 def create_project():
     payload = request.get_json(force=True)
     name = payload["name"]
-    owner = payload["owner"]
+    # Accept either `owner` or `owner_email` for backward compatibility with tutorial
+    owner = payload.get("owner") or payload.get("owner_email")
+    if owner is None:
+        return jsonify({"error": "owner or owner_email required"}), 400
 
     project = Project(name=name, owner=owner)
     db.session.add(project)
