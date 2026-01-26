@@ -1,0 +1,190 @@
+# Flask Project Manager - Defects Report
+
+## DEFECT #1: Incorrect Environment Variable Name in README
+**Severity:** Critical
+**Location:** README.md - Onboarding section, step 3
+
+**Description:**
+The README instructs users to set `DATABASE_URL` environment variable, but the application code expects `DB_URL`.
+
+**Reproduction Steps:**
+1. Follow README step 3: `$env:DATABASE_URL = "sqlite:///project_manager.db"`
+2. Try to start the app: `flask --app app run --debug`
+3. Application fails with RuntimeError
+
+**Error Trace:**
+```
+RuntimeError: Missing DB_URL environment variable
+```
+
+**Root Cause:**
+In app.py line 14:
+```python
+database_url = os.environ.get("DB_URL")
+```
+
+**Expected:** README should instruct `$env:DB_URL = "sqlite:///project_manager.db"`
+**Actual:** README says `$env:DATABASE_URL = "sqlite:///project_manager.db"`
+
+
+## DEFECT #2: Incorrect Flask App Module Name
+**Severity:** Critical
+**Location:** README.md - Onboarding section, step 4
+
+**Description:**
+The README instructs users to run `flask --app project_manager run --debug`, but the application module is named `app.py`, not `project_manager.py`.
+
+**Reproduction Steps:**
+1. Execute: `flask --app project_manager run --debug`
+2. Flask cannot import the module
+
+**Error Trace:**
+```
+Usage: python -m flask run [OPTIONS]
+Try 'python -m flask run --help' for help.
+
+Error: Could not import 'project_manager'.
+```
+
+**Root Cause:**
+The main application file is named `app.py`, not `project_manager.py`.
+
+**Expected:** README should instruct `flask --app app run --debug`
+**Actual:** README says `flask --app project_manager run --debug`
+
+
+## DEFECT #3: Incorrect Field Name in Tutorial Example
+**Severity:** High
+**Location:** README.md - "Tutorial: Creating a Project" section
+
+**Description:**
+The tutorial example uses `owner_email` field, but the application code expects `owner` field.
+
+**Reproduction Steps:**
+1. Start the Flask server correctly
+2. Run the tutorial code from README:
+```python
+import requests
+
+payload = {
+    "name": "Sample Project",
+    "owner_email": "lead@example.com"
+}
+response = requests.post("http://127.0.0.1:5000/projects", json=payload)
+print(response.json())
+```
+
+**Error Trace:**
+```
+Status Code: 500
+Internal Server Error
+KeyError: 'owner'
+```
+
+**Root Cause:**
+In app.py lines 47-48, the code accesses:
+```python
+name = payload["name"]
+owner = payload["owner"]
+```
+
+But the README example uses `owner_email` instead of `owner`.
+
+In models.py line 12, the model field is:
+```python
+owner = db.Column(db.String(120), nullable=False)
+```
+
+**Expected:** Tutorial should use `"owner": "lead@example.com"`
+**Actual:** Tutorial uses `"owner_email": "lead@example.com"`
+
+
+## DEFECT #4: Incorrect API Endpoint in Tutorial
+**Severity:** High
+**Location:** README.md - "Listing Tasks for a Project" section
+
+**Description:**
+The README shows the tasks listing endpoint as `/api/projects/1/tasks`, but the actual route is `/projects/1/tasks` (without the `/api/` prefix).
+
+**Reproduction Steps:**
+1. Start the Flask server
+2. Create a project
+3. Try to list tasks using README URL:
+```python
+import requests
+response = requests.get("http://127.0.0.1:5000/api/projects/1/tasks")
+print(response.json())
+```
+
+**Error Trace:**
+```
+Status Code: 404
+Not Found
+```
+
+**Root Cause:**
+In app.py line 57, the route is defined as:
+```python
+@app.route("/projects/<int:project_id>/tasks", methods=["GET"])
+```
+
+There is no `/api/` prefix in any of the routes.
+
+**Expected:** Tutorial should use `http://127.0.0.1:5000/projects/1/tasks`
+**Actual:** Tutorial uses `http://127.0.0.1:5000/api/projects/1/tasks`
+
+
+## DEFECT #5: Incomplete requirements.txt
+**Severity:** Medium
+**Location:** requirements.txt
+
+**Description:**
+The requirements.txt file is missing critical dependencies that are imported in the application code.
+
+**Missing Dependencies:**
+1. `flask-sqlalchemy` - Required by models.py (line 1: `from flask_sqlalchemy import SQLAlchemy`)
+2. `requests` - Required for running tutorial examples
+
+**Reproduction Steps:**
+1. Create a fresh virtual environment
+2. Install dependencies: `pip install -r requirements.txt`
+3. Try to run the app
+4. Application fails with ImportError
+
+**Error Trace:**
+```
+ModuleNotFoundError: No module named 'flask_sqlalchemy'
+```
+
+**Expected:** requirements.txt should include all necessary dependencies
+**Actual:** requirements.txt only contains Flask and pytest
+
+
+## DEFECT #6: Inconsistent Tutorial Response Format
+**Severity:** Low
+**Location:** README.md - "Tutorial: Creating a Project" section
+
+**Description:**
+The README shows the expected response using `owner_email`, which is inconsistent with the actual API response that returns `owner`.
+
+**Expected Response (from README):**
+```json
+{"id": 1, "name": "Sample Project", "owner_email": "lead@example.com"}
+```
+
+**Actual Response:**
+```json
+{"id": 1, "name": "Sample Project", "owner": "lead@example.com"}
+```
+
+This is a documentation issue related to Defect #3.
+
+
+## Summary
+Total Defects Found: 6
+- Critical: 2 (Environment variable, module name)
+- High: 2 (Field name mismatch, incorrect endpoint)
+- Medium: 1 (Missing dependencies)
+- Low: 1 (Documentation inconsistency)
+
+All defects have been verified through actual reproduction and testing.
